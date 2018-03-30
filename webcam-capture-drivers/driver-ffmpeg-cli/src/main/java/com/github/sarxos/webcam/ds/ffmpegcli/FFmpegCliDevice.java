@@ -58,13 +58,17 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 	}
 
 	public void startProcess() throws IOException {
-		ProcessBuilder builder = new ProcessBuilder(buildCommand());
+		LOG.debug("buildCommand");
+		String[] astrProcess = buildCommand();
+		LOG.debug("startProcess() <= " + Arrays.toString(astrProcess));
+		ProcessBuilder builder = new ProcessBuilder(astrProcess);
 		builder.redirectErrorStream(true); // so we can ignore the error stream
 
 		process = builder.start();
 	}
 
 	private byte[] readNextFrame() throws IOException {
+		LOG.trace("readNextFrame()");
 		InputStream out = process.getInputStream();
 
 		final int SIZE = arraySize();
