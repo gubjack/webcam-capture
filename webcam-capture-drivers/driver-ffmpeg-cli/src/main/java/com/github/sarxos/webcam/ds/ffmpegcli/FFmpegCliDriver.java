@@ -40,6 +40,7 @@ public class FFmpegCliDriver implements WebcamDriver, WebcamDiscoverySupport {
 			devices = getUnixDevices();
 		}
 
+		LOG.debug("Recognized {}", devices);
 		return devices;
 	}
 

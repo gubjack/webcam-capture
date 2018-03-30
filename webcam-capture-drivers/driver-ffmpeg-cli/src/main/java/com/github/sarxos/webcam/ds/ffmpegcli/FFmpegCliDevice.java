@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -41,6 +42,19 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 		this.path = path;
 		this.name = name;
 		this.resolutions = readResolutions(resolutions);
+	}
+
+	public String toString() {
+		return this.getClass().getSimpleName()
+				+ "("
+					+ path
+					+ ", " + name
+					+ ", " + Arrays.toString(resolutions)
+					+ ", " + process
+					+ ", " + resolution
+					+ ", " + open
+					+ ", " + disposed
+				+ ")";
 	}
 
 	public void startProcess() throws IOException {
