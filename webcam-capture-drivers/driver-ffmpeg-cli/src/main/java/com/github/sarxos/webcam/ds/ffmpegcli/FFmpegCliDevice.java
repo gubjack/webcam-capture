@@ -68,27 +68,25 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 	}
 
 	private byte[] readNextFrame() throws IOException {
-		LOG.trace("readNextFrame()");
+		LOG.debug("readNextFrame()");
 		InputStream out = process.getInputStream();
 
 		final int SIZE = arraySize();
-		final int CHUNK_SIZE = SIZE / 20;
 
 		int cursor = 0;
 		byte[] buffer = new byte[SIZE];
 
 		while (isAlive(process)) {
-			int no = out.available();
-			if (no >= CHUNK_SIZE) {
+			int iMissing = SIZE - cursor;
+			LOG.trace("readNextFrame() {}", iMissing);
 
 				// If buffer is not full yet
-				if (cursor < SIZE) {
-					out.read(buffer, cursor, CHUNK_SIZE);
-					cursor += CHUNK_SIZE;
+				if (iMissing > 0) {
+					int  iRead = out.read(buffer, cursor, iMissing);
+					cursor += iRead;
 				} else {
 					break;
 				}
-			}
 		}
 
 		return buffer;
