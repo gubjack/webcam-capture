@@ -208,7 +208,9 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 			"-loglevel", "panic", // suppress ffmpeg headers
 			"-f", captureDriver, // camera format
 			"-s", getResolutionString(), // frame dimension
+			"-framerate", "1",  // desired v4l2 input frame rate in fps
 			"-i", deviceInput, // input file
+			"-r", "1:2", // output frame rate fraction in fps
 			"-vcodec", "rawvideo", // raw output
 			"-f", "rawvideo", // raw output
 			"-vf", "hflip", // flip image horizontally
