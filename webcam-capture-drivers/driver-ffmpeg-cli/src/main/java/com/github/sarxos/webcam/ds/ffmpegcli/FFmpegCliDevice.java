@@ -23,6 +23,7 @@ import com.github.sarxos.webcam.WebcamException;
 public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess {
 
 	private static final Logger LOG = LoggerFactory.getLogger(FFmpegCliDevice.class);
+	private static final Runtime RT = Runtime.getRuntime();
 
 	private volatile Process process = null;
 
@@ -30,6 +31,7 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 	private String name = null;
 	private Dimension[] resolutions = null;
 	private Dimension resolution = null;
+	private File pipe = null;
 
 	private AtomicBoolean open = new AtomicBoolean(false);
 	private AtomicBoolean disposed = new AtomicBoolean(false);
@@ -42,6 +44,11 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 		this.path = path;
 		this.name = name;
 		this.resolutions = readResolutions(resolutions);
+
+		String  strDevice = name.substring(name.lastIndexOf('/') + 1);
+		String  strPipe = "/tmp/" + strDevice + ".raw";
+		LOG.debug("Using fifo {}", strPipe);
+		pipe = new File(strPipe);
 	}
 
 	public String toString() {
@@ -50,6 +57,7 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 					+ path
 					+ ", " + name
 					+ ", " + Arrays.toString(resolutions)
+					+ ", " + pipe
 					+ ", " + process
 					+ ", " + resolution
 					+ ", " + open
@@ -58,6 +66,15 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 	}
 
 	public void startProcess() throws IOException {
+
+		LOG.debug("mkfifo");
+		try {
+			RT.exec(new String[] { "mkfifo", pipe.getAbsolutePath() })
+					.waitFor();
+		} catch (InterruptedException e) {
+			throw new WebcamException(e);
+		}
+
 		LOG.debug("buildCommand");
 		String[] astrProcess = buildCommand();
 		LOG.debug("startProcess() <= " + Arrays.toString(astrProcess));
@@ -180,6 +197,10 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 			process.waitFor();
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
+		}
+
+		if (!pipe.delete()) {
+			pipe.deleteOnExit();
 		}
 	}
 
