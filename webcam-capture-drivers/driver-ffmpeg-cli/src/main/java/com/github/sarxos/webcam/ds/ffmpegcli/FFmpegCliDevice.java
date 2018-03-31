@@ -3,10 +3,12 @@ package com.github.sarxos.webcam.ds.ffmpegcli;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,6 +87,32 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 		builder.redirectErrorStream(true); // so we can ignore the error stream
 
 		process = builder.start();
+
+		final String strReader = "READER " + pipe;
+		LOG.debug(strReader + " start");
+		InputStream out = process.getInputStream();
+		InputStreamReader isr = new InputStreamReader(out);
+		final BufferedReader br = new BufferedReader(isr);
+		new Thread() {
+			public void run() {
+				setName(strReader);
+				LOG.debug(strReader + " - TRY");
+				try {
+					for (;;) {
+						LOG.debug(strReader + " - {}", br.readLine());
+					}
+				} catch (Exception e) {
+					// End of stream - usually when the process is terminated
+					boolean eos = e instanceof IOException
+							&& e.getMessage().equals("Stream closed");
+					// Do not protocol EOS
+					if (!eos)
+						LOG.debug(strReader + " - CATCH", e);
+				} finally {
+					LOG.debug(strReader + " - FINALLY");
+				}
+			}
+		}.start();
 
 		LOG.debug("is");
 		is = new FileInputStream(pipe);
@@ -239,7 +267,7 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 		return new String[] {
 			FFmpegCliDriver.getCommand(path),
 			// General settings
-			"-loglevel", "panic", // suppress ffmpeg headers
+			"-loglevel", "verbose", // control status output
 			"-nostdin", // disable interaction
 			"-y", // overwrite output file
 			// Input
