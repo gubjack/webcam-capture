@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -32,6 +33,7 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 	private Dimension[] resolutions = null;
 	private Dimension resolution = null;
 	private File pipe = null;
+	private InputStream is = null;
 
 	private AtomicBoolean open = new AtomicBoolean(false);
 	private AtomicBoolean disposed = new AtomicBoolean(false);
@@ -59,6 +61,7 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 					+ ", " + Arrays.toString(resolutions)
 					+ ", " + pipe
 					+ ", " + process
+					+ ", " + is
 					+ ", " + resolution
 					+ ", " + open
 					+ ", " + disposed
@@ -82,11 +85,14 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 		builder.redirectErrorStream(true); // so we can ignore the error stream
 
 		process = builder.start();
+
+		LOG.debug("is");
+		is = new FileInputStream(pipe);
 	}
 
 	private byte[] readNextFrame() throws IOException {
 		LOG.debug("readNextFrame()");
-		InputStream out = process.getInputStream();
+		InputStream out = is;
 
 		final int SIZE = arraySize();
 
@@ -191,6 +197,12 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 			return;
 		}
 
+		try {
+			is.close();
+		} catch (IOException e) {
+			LOG.warn("Error closing input from pipe", e);
+		}
+
 		process.destroy();
 
 		try {
@@ -228,6 +240,8 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 			FFmpegCliDriver.getCommand(path),
 			// General settings
 			"-loglevel", "panic", // suppress ffmpeg headers
+			"-nostdin", // disable interaction
+			"-y", // overwrite output file
 			// Input
 			"-f", captureDriver, // camera format
 			"-s", getResolutionString(), // frame dimension
@@ -240,7 +254,7 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 			"-f", "rawvideo", // raw output
 			"-vsync", "vfr", // avoid frame duplication
 			"-pix_fmt", "bgr24", // output format as bgr24
-			"-", // output to stdout
+			pipe.getAbsolutePath(),  // output to pipe
 		};
 	}
 
