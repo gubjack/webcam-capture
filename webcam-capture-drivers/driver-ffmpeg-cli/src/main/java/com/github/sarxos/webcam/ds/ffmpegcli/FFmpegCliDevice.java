@@ -278,7 +278,7 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 			// Processing
 			"-vcodec", "rawvideo", // raw output
 			// Output
-			"-r", "1:2", // output frame rate fraction in fps
+			"-r", "1:5", // output frame rate fraction in fps
 			"-f", "rawvideo", // raw output
 			"-vsync", "vfr", // avoid frame duplication
 			"-pix_fmt", "bgr24", // output format as bgr24
