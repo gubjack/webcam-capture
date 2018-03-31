@@ -205,13 +205,17 @@ public class FFmpegCliDevice implements WebcamDevice, WebcamDevice.BufferAccess 
 
 		return new String[] {
 			FFmpegCliDriver.getCommand(path),
+			// General settings
 			"-loglevel", "panic", // suppress ffmpeg headers
+			// Input
 			"-f", captureDriver, // camera format
 			"-s", getResolutionString(), // frame dimension
 			"-framerate", "1",  // desired v4l2 input frame rate in fps
 			"-i", deviceInput, // input file
-			"-r", "1:2", // output frame rate fraction in fps
+			// Processing
 			"-vcodec", "rawvideo", // raw output
+			// Output
+			"-r", "1:2", // output frame rate fraction in fps
 			"-f", "rawvideo", // raw output
 			"-vsync", "vfr", // avoid frame duplication
 			"-pix_fmt", "bgr24", // output format as bgr24
