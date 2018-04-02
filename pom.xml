@@ -115,6 +115,19 @@
 
   <build>
 
+    <extensions>
+
+      <!-- Maven-Wagon-SSH -->
+      <extension>
+        <!-- http://maven.apache.org/wagon/wagon-providers/wagon-ssh
+                    04Sep2015 -->
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh</artifactId>
+        <version>2.9</version>
+      </extension>
+
+    </extensions>
+
     <pluginManagement>
       <plugins>
         <plugin>
